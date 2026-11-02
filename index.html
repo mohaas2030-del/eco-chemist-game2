@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco-Chemist Simulator</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #81c784;
+            --dark: #1b5e20;
+            --bg: #f4f9f4;
+            --card: #ffffff;
+            --text: #2c3e50;
+            --danger: #e53935;
+            --warning: #fb8c00;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(46, 125, 50, 0.15);
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            border-top: 8px solid var(--primary);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #e8f5e9;
+            padding: 5px;
+            border-radius: 12px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--primary);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .stage-tabs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .stage-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #aaa;
+            border-bottom: 3px solid #ccc;
+        }
+
+        .stage-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .player-turn-banner {
+            background: #fff3e0;
+            color: #e65100;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .simulation-box {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+        }
+
+        .visual-container {
+            height: 120px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.5s ease;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .water-stage { background: #ffebee; }
+        .soil-stage { background: #efebe9; }
+        .air-stage { background: #eceff1; }
+
+        .visual-icon {
+            font-size: 2.5rem;
+            transition: transform 0.3s;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .metric-title {
+            font-size: 0.75rem;
+            color: #777;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .guide-box {
+            background: #e8f5e9;
+            border-left: 4px solid var(--primary);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .chemicals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .chem-btn {
+            background: white;
+            border: 1.5px solid #ddd;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chem-btn:active {
+            transform: scale(0.97);
+        }
+
+        .chem-btn:hover {
+            border-color: var(--primary-light);
+            background: #f1f8e9;
+        }
+
+        .chem-icon {
+            font-size: 1.4rem;
+        }
+
+        .chem-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chem-name {
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .chem-desc {
+            font-size: 0.7rem;
+            color: #777;
+        }
+
+        .mix-basket {
+            background: #fff;
+            border: 1px dashed #bbb;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .basket-item {
+            background: var(--primary-light);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--dark);
+        }
+
+        .btn-reset {
+            background: #eee;
+            color: #555;
+            flex: 0.4;
+        }
+
+        /* Modal Popup */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .modal-text {
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>🧪 Eco-Chemist Lab 🌿</h1>
+        <div class="subtitle">Treat Water, Soil & Air to Save the Planet!</div>
+    </header>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" id="btn-solo" onclick="setMode('solo')">👤 Solo Mode</button>
+        <button class="mode-btn" id="btn-2p" onclick="setMode('2p')">👥 2 Players Battle</button>
+    </div>
+
+    <div id="turn-banner" class="player-turn-banner">
+        Player 1's Turn
+    </div>
+
+    <div class="stage-tabs">
+        <div class="stage-tab active" id="tab-1">1. Water</div>
+        <div class="stage-tab" id="tab-2">2. Soil</div>
+        <div class="stage-tab" id="tab-3">3. Air</div>
+    </div>
+
+    <div class="guide-box" id="guide-text">
+        🎯 <b>Goal:</b> Clean dirty acid water! Target: pH ~ 7.0 & Pure Water ~ 90%
+    </div>
+
+    <div class="simulation-box">
+        <div class="visual-container water-stage" id="visual-bg">
+            <div class="visual-icon" id="visual-icon">🧪</div>
+            <div style="font-size: 0.8rem; font-weight: bold; margin-top: 5px;" id="visual-status">Dirty Acid Water</div>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-title" id="m1-title">pH Level</div>
+                <div class="metric-value" id="m1-val">3.5</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title" id="m2-title">Water Purity</div>
+                <div class="metric-value" id="m2-val">20%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chemicals-grid" id="chem-buttons">
+        <!-- Dynamic Buttons -->
+    </div>
+
+    <div class="mix-basket" id="basket">
+        <span style="color: #999;">Selected Reagents (Max 3):</span>
+    </div>
+
+    <div class="action-btns">
+        <button class="btn btn-reset" onclick="resetStage()">Reset</button>
+        <button class="btn btn-primary" onclick="testSolution()">Test Solution ✨</button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="result-modal">
+    <div class="modal-content">
+        <div class="modal-title" id="modal-title">Stage Completed! 🎉</div>
+        <div class="modal-text" id="modal-text">Great job chemist!</div>
+        <button class="btn btn-primary" onclick="nextStage()" id="modal-btn">Continue ➡️</button>
+    </div>
+</div>
+
+<script>
+    let gameMode = 'solo'; // 'solo' or '2p'
+    let currentPlayer = 1;
+    let p1Score = 0;
+    let p2Score = 0;
+    let currentStage = 1; // 1: Water, 2: Soil, 3: Air
+
+    let selectedChems = [];
+
+    // Stage Data
+    const stageData = {
+        1: {
+            name: "Water Purification",
+            bgClass: "water-stage",
+            icon: "🧪",
+            status: "Acidic & Polluted Water",
+            m1: "pH Level",
+            m2: "Water Purity",
+            guide: "🎯 <b>Goal:</b> Neutralize acid water and filter pollutants! Target: pH 6.5 - 7.5 & Purity > 80%",
+            chems: [
+                { id: "base", name: "Safe Base", icon: "🧪", desc: "Raises pH (+2.0)" },
+                { id: "carbon", name: "Active Carbon", icon: "⚫", desc: "Purifies water (+30%)" },
+                { id: "acid", name: "Acid Drop", icon: "⚠️", desc: "Lowers pH (-1.5)" },
+                { id: "sand", name: "Sand Filter", icon: "🏖️", desc: "Removes dirt (+20%)" }
+            ]
+        },
+        2: {
+            name: "Soil Restoration",
+            bgClass: "soil-stage",
+            icon: "🌱",
+            status: "Poor & Unfertile Soil",
+            m1: "Nutrient (NPK)",
+            m2: "Soil Health",
+            guide: "🎯 <b>Goal:</b> Add nutrients & Biochar! Target: NPK > 70% & Health > 80%",
+            chems: [
+                { id: "npk", name: "NPK Minerals", icon: "💊", desc: "Boosts NPK (+35%)" },
+                { id: "biochar", name: "Biochar", icon: "🪴", desc: "Improves soil health (+30%)" },
+                { id: "pesticide", name: "Chemical Spray", icon: "☠️", desc: "Harms health (-20%)" },
+                { id: "compost", name: "Organic Compost", icon: "🍂", desc: "Boosts health & NPK (+20%)" }
+            ]
+        },
+        3: {
+            name: "Air Scrubbing",
+            bgClass: "air-stage",
+            icon: "🌫️",
+            status: "High CO2 & Smog",
+            m1: "CO2 Reduction",
+            m2: "Air Quality (AQI)",
+            guide: "🎯 <b>Goal:</b> Clean atmosphere smog! Target: CO2 Cut > 70% & AQI > 80%",
+            chems: [
+                { id: "algae", name: "Micro-Algae", icon: "🧫", desc: "Absorbs CO2 (+40%)" },
+                { id: "scrubber", name: "Catalyst Filter", icon: "⚙️", desc: "Cleans Air (+35%)" },
+                { id: "smoke", name: "Factory Smoke", icon: "🏭", desc: "Increases CO2 (-30%)" },
+                { id: "trees", name: "Planting Trees", icon: "🌳", desc: "Cleans AQI (+25%)" }
+            ]
+        }
+    };
+
+    // Current Values
+    let val1 = 3.5; // pH / NPK / CO2 Cut
+    let val2 = 20;  // Purity / Health / AQI
+
+    function setMode(mode) {
+        gameMode = mode;
+        document.getElementById('btn-solo').classList.toggle('active', mode === 'solo');
+        document.getElementById('btn-2p').classList.toggle('active', mode === '2p');
+        
+        const banner = document.getElementById('turn-banner');
+        if (mode === '2p') {
+            banner.style.display = 'block';
+            banner.innerText = `Player ${currentPlayer}'s Turn`;
+        } else {
+            banner.style.display = 'none';
+        }
+        resetGame();
+    }
+
+    function renderStage() {
+        const data = stageData[currentStage];
+        
+        // Tabs
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById(`tab-${i}`).classList.toggle('active', i === currentStage);
+        }
+
+        // Guide & Visual
+        document.getElementById('guide-text').innerHTML = data.guide;
+        const visualBg = document.getElementById('visual-bg');
+        visualBg.className = `visual-container ${data.bgClass}`;
+        document.getElementById('visual-icon').innerText = data.icon;
+        document.getElementById('visual-status').innerText = data.status;
+
+        // Metrics
+        document.getElementById('m1-title').innerText = data.m1;
+        document.getElementById('m2-title').innerText = data.m2;
+        updateMetricsUI();
+
+        // Chem Buttons
+        const chemGrid = document.getElementById('chem-buttons');
+        chemGrid.innerHTML = '';
+        data.chems.forEach(c => {
+            const btn = document.createElement('div');
+            btn.className = 'chem-btn';
+            btn.onclick = () => addChem(c);
+            btn.innerHTML = `
+                <div class="chem-icon">${c.icon}</div>
+                <div class="chem-info">
+                    <div class="chem-name">${c.name}</div>
+                    <div class="chem-desc">${c.desc}</div>
+                </div>
+            `;
+            chemGrid.appendChild(btn);
+        });
+
+        selectedChems = [];
+        updateBasketUI();
+    }
+
+    function addChem(chem) {
+        if (selectedChems.length >= 3) return;
+        selectedChems.push(chem);
+        updateBasketUI();
+    }
+
+    function updateBasketUI() {
+        const basket = document.getElementById('basket');
+        if (selectedChems.length === 0) {
+            basket.innerHTML = `<span style="color: #999;">Selected Reagents (Max 3):</span>`;
+            return;
+        }
+        basket.innerHTML = '';
+        selectedChems.forEach((c, idx) => {
+            const item = document.createElement('span');
+            item.className = 'basket-item';
+            item.innerHTML = `${c.icon} ${c.name}`;
+            basket.appendChild(item);
+        });
+    }
+
+    function updateMetricsUI() {
+        if (currentStage === 1) {
+            document.getElementById('m1-val').innerText = val1.toFixed(1);
+            document.getElementById('m2-val').innerText = `${Math.round(val2)}%`;
+        } else {
+            document.getElementById('m1-val').innerText = `${Math.round(val1)}%`;
+            document.getElementById('m2-val').innerText = `${Math.round(val2)}%`;
+        }
+    }
+
+    function testSolution() {
+        // Calculate based on selected chemicals
+        selectedChems.forEach(c => {
+            if (currentStage === 1) {
+                if (c.id === 'base') val1 += 2.0;
+                if (c.id === 'acid') val1 -= 1.5;
+                if (c.id === 'carbon') val2 += 30;
+                if (c.id === 'sand') val2 += 20;
+            } else if (currentStage === 2) {
+                if (c.id === 'npk') val1 += 35;
+                if (c.id === 'biochar') val2 += 30;
+                if (c.id === 'pesticide') val2 -= 20;
+                if (c.id === 'compost') { val1 += 20; val2 += 20; }
+            } else if (currentStage === 3) {
+                if (c.id === 'algae') val1 += 40;
+                if (c.id === 'scrubber') val2 += 35;
+                if (c.id === 'smoke') val1 -= 30;
+                if (c.id === 'trees') val2 += 25;
+            }
+        });
+
+        // Cap max
+        if (val2 > 100) val2 = 100;
+        if (val1 > 100 && currentStage !== 1) val1 = 100;
+
+        updateMetricsUI();
+
+        // Check success
+        let success = false;
+        if (currentStage === 1 && val1 >= 6.0 && val1 <= 8.0 && val2 >= 70) success = true;
+        if (currentStage === 2 && val1 >= 60 && val2 >= 70) success = true;
+        if (currentStage === 3 && val1 >= 60 && val2 >= 70) success = true;
+
+        showResultModal(success);
+    }
+
+    function showResultModal(success) {
+        const modal = document.getElementById('result-modal');
+        const title = document.getElementById('modal-title');
+        const text = document.getElementById('modal-text');
+        const btn = document.getElementById('modal-btn');
+
+        modal.style.display = 'flex';
+
+        if (success) {
+            title.innerText = "Stage Mastered! 🌟";
+            text.innerText = `Awesome job! You successfully restored the environmental balance in Stage ${currentStage}!`;
+            btn.innerText = currentStage < 3 ? "Next Stage ➡️" : "Finish Lab 🏆";
+            if (gameMode === '2p') {
+                if (currentPlayer === 1) p1Score += 100;
+                else p2Score += 100;
+            }
+        } else {
+            title.innerText = "Try Again! 🧪";
+            text.innerText = "The values didn't reach the safety targets. Adjust your chemical mix!";
+            btn.innerText = "Retry Stage 🔄";
+        }
+    }
+
+    function nextStage() {
+        document.getElementById('result-modal').style.display = 'none';
+        
+        const data = stageData[currentStage];
+        let success = false;
+        if (currentStage === 1 && val1 >= 6.0 && val1 <= 8.0 && val2 >= 70) success = true;
+        if (currentStage === 2 && val1 >= 60 && val2 >= 70) success = true;
+        if (currentStage === 3 && val1 >= 60 && val2 >= 70) success = true;
+
+        if (success) {
+            if (currentStage < 3) {
+                currentStage++;
+                resetStageValues();
+                renderStage();
+            } else {
+                // Game Finished
+                if (gameMode === '2p' && currentPlayer === 1) {
+                    currentPlayer = 2;
+                    currentStage = 1;
+                    document.getElementById('turn-banner').innerText = "Player 2's Turn";
+                    alert("Player 1 completed! Now Player 2 takes the lab!");
+                    resetStageValues();
+                    renderStage();
+                } else if (gameMode === '2p' && currentPlayer === 2) {
+                    alert(`Battle Over! 🏆\nPlayer 1 Score: ${p1Score}\nPlayer 2 Score: ${p2Score}`);
+                    resetGame();
+                } else {
+                    alert("🎉 Congratulations! You completed all Eco-Chemist stages!");
+                    resetGame();
+                }
+            }
+        } else {
+            resetStageValues();
+            updateMetricsUI();
+            selectedChems = [];
+            updateBasketUI();
+        }
+    }
+
+    function resetStageValues() {
+        
